@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: bluestock-ipo
+    env: python
+    plan: free
+    buildCommand: "./build.sh"
+    startCommand: "gunicorn bluestock_ipo.wsgi:application"
+    envVars:
+      - key: DJANGO_SETTINGS_MODULE
+        value: bluestock_ipo.settings
+      - key: PYTHON_VERSION
+        value: 3.12.3
+      - key: WEB_CONCURRENCY
+        value: 4
