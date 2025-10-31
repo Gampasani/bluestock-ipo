@@ -1,0 +1,60 @@
+{% extends 'ipo/base.html' %}
+
+{% block content %}
+<h2 class="text-center mb-4">IPO Listings</h2>
+
+<ul class="nav nav-tabs" id="ipoTabs" role="tablist">
+  <li class="nav-item" role="presentation">
+    <button class="nav-link active" id="upcoming-tab" data-bs-toggle="tab" data-bs-target="#upcoming" type="button">Upcoming</button>
+  </li>
+  <li class="nav-item" role="presentation">
+    <button class="nav-link" id="ongoing-tab" data-bs-toggle="tab" data-bs-target="#ongoing" type="button">Ongoing</button>
+  </li>
+  <li class="nav-item" role="presentation">
+    <button class="nav-link" id="listed-tab" data-bs-toggle="tab" data-bs-target="#listed" type="button">Listed</button>
+  </li>
+</ul>
+
+<div class="tab-content mt-4">
+  <div class="tab-pane fade show active" id="upcoming" role="tabpanel"></div>
+  <div class="tab-pane fade" id="ongoing" role="tabpanel"></div>
+  <div class="tab-pane fade" id="listed" role="tabpanel"></div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(async function loadIPOs() {
+  try {
+    const res = await fetch('/api/ipo/');
+    if (!res.ok) throw new Error('Failed to fetch IPOs');
+    const data = await res.json();
+
+    const buckets = {
+      upcoming: document.getElementById('upcoming'),
+      ongoing: document.getElementById('ongoing'),
+      listed: document.getElementById('listed')
+    };
+
+    const fmt = (v) => (v === null || v === undefined || v === '') ? '-' : v;
+
+    data.forEach(ipo => {
+      const cardHTML = `
+        <div class="card mb-3 shadow-sm ipo-card" onclick="location.href='/ipo/${ipo.id}/'">
+          <div class="card-body d-flex gap-3 align-items-center">
+            <img src="${ipo.logo}" alt="${ipo.company_name}" class="logo" />
+            <div class="flex-grow-1">
+              <h5 class="card-title mb-1">${ipo.company_name}</h5>
+              <div class="small text-muted mb-1"><strong>Price Band:</strong> ${fmt(ipo.price_band)}</div>
+              <div class="small text-muted"><strong>Open:</strong> ${fmt(ipo.open_date)} &nbsp;|&nbsp; <strong>Close:</strong> ${fmt(ipo.close_date)}</div>
+            </div>
+          </div>
+        </div>`;
+      (buckets[ipo.status] || buckets.upcoming).insertAdjacentHTML('beforeend', cardHTML);
+    });
+  } catch (e) {
+    console.error(e);
+  }
+})();
+</script>
+{% endblock %}

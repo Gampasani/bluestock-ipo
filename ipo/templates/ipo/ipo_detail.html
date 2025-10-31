@@ -1,0 +1,94 @@
+{% extends 'ipo/base.html' %}
+
+{% block content %}
+<div id="detail" class="row">
+  <div class="col-12 col-lg-8">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <div class="d-flex align-items-center gap-3 mb-3">
+          <img id="logo" class="logo" alt="Logo" />
+          <div>
+            <h3 id="company_name" class="mb-0">Company</h3>
+            <small class="text-muted" id="status_badge"></small>
+          </div>
+        </div>
+
+        <div class="row g-3">
+          <div class="col-md-6">
+            <div><strong>Price Band:</strong> <span id="price_band">-</span></div>
+            <div><strong>Issue Size:</strong> <span id="issue_size">-</span></div>
+            <div><strong>Issue Type:</strong> <span id="issue_type">-</span></div>
+            <div><strong>Open Date:</strong> <span id="open_date">-</span></div>
+            <div><strong>Close Date:</strong> <span id="close_date">-</span></div>
+          </div>
+          <div class="col-md-6">
+            <div><strong>IPO Price:</strong> <span id="ipo_price">-</span></div>
+            <div><strong>Listing Date:</strong> <span id="listing_date">-</span></div>
+            <div><strong>Listing Price:</strong> <span id="listing_price">-</span></div>
+            <div><strong>Current Price:</strong> <span id="current_market_price">-</span></div>
+            <div><strong>Listing Gain:</strong> <span id="listing_gain">-</span></div>
+            <div><strong>Current Return:</strong> <span id="current_return">-</span></div>
+          </div>
+        </div>
+
+        <div class="mt-4 d-flex gap-2">
+          <a id="rhp_link" class="btn btn-primary btn-sm" target="_blank" rel="noopener">Download RHP</a>
+          <a id="drhp_link" class="btn btn-outline-primary btn-sm" target="_blank" rel="noopener">Download DRHP</a>
+          <a href="/" class="btn btn-secondary btn-sm">← Back</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function() {
+  function getPKFromURL() {
+    const parts = window.location.pathname.split('/').filter(Boolean);
+    const idx = parts.indexOf('ipo');
+    if (idx !== -1 && parts[idx+1]) return parts[idx+1];
+    return parts[parts.length - 1];
+  }
+
+  const pk = getPKFromURL();
+  fetch(`/api/ipo/${pk}/`)
+    .then(r => {
+      if (!r.ok) throw new Error('Failed to load IPO');
+      return r.json();
+    })
+    .then(ipo => {
+      const set = (id, v) => document.getElementById(id).textContent = (v ?? '-') ;
+      const img = document.getElementById('logo');
+      img.src = ipo.logo;
+      img.alt = ipo.company_name;
+
+      set('company_name', ipo.company_name);
+      document.getElementById('status_badge').textContent = (ipo.status || '-').toUpperCase();
+
+      set('price_band', ipo.price_band);
+      set('issue_size', ipo.issue_size);
+      set('issue_type', ipo.issue_type);
+      set('open_date', ipo.open_date);
+      set('close_date', ipo.close_date);
+
+      set('ipo_price', ipo.ipo_price);
+      set('listing_date', ipo.listing_date);
+      set('listing_price', ipo.listing_price);
+      set('current_market_price', ipo.current_market_price);
+
+      set('listing_gain', ipo.listing_gain !== null ? `${ipo.listing_gain}%` : '-');
+      set('current_return', ipo.current_return !== null ? `${ipo.current_return}%` : '-');
+
+      const rhpBtn = document.getElementById('rhp_link');
+      const drhpBtn = document.getElementById('drhp_link');
+      rhpBtn.href = ipo.rhp_pdf || '#';
+      drhpBtn.href = ipo.drhp_pdf || '#';
+      if (!ipo.rhp_pdf) rhpBtn.classList.add('disabled');
+      if (!ipo.drhp_pdf) drhpBtn.classList.add('disabled');
+    })
+    .catch(err => console.error(err));
+})();
+</script>
+{% endblock %}
